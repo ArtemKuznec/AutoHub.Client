@@ -8,6 +8,7 @@ import {
   type SteeringWheelSide as SteeringWheelSideServer,
 } from "../../Services/carAdService";
 import { regionService } from "../../Services/regionService";
+import { brandService } from "../../Services/brandService";
 import Header from "../../Components/Header/HeaderComponent";
 import "./CreateAdPage.css";
 
@@ -126,6 +127,8 @@ const formatPhone = (raw: string) => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [regions, setRegions] = useState<string[]>([]);
   const [regionsError, setRegionsError] = useState<string | null>(null);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [brandsError, setBrandsError] = useState<string | null>(null);
 
   const handleChange =
     (field: keyof CreateAdFormState) =>
@@ -183,7 +186,21 @@ const formatPhone = (raw: string) => {
       }
     };
 
+    const loadBrands = async () => {
+      try {
+        const list = await brandService.getAllBrands();
+        if (!isMounted) return;
+        setBrands(list);
+      } catch (error) {
+        if (!isMounted) return;
+        setBrandsError("Не удалось загрузить список брендов.");
+        // eslint-disable-next-line no-console
+        console.error("Ошибка при загрузке брендов:", error);
+      }
+    };
+
     loadRegions();
+    loadBrands();
 
     return () => {
       isMounted = false;
@@ -194,7 +211,6 @@ const formatPhone = (raw: string) => {
     const newErrors: CreateAdFormErrors = {};
 
     if (!form.vin.trim()) newErrors.vin = "Укажите VIN или номер кузова.";
-    if (!form.brand.trim()) newErrors.brand = "Укажите марку автомобиля.";
     if (!form.model.trim()) newErrors.model = "Укажите модель автомобиля.";
     if (!form.steering) newErrors.steering = "Выберите расположение руля.";
     if (!form.bodyType) newErrors.bodyType = "Выберите тип кузова.";
@@ -231,6 +247,16 @@ const formatPhone = (raw: string) => {
     }
 
     if (!form.city.trim()) newErrors.city = "Укажите город продажи.";
+
+    const trimmedBrand = form.brand.trim();
+    if (!trimmedBrand) {
+      newErrors.brand = "Укажите марку автомобиля.";
+    } else if (
+      brands.length > 0 &&
+      !brands.some((brand) => brand.toLowerCase() === trimmedBrand.toLowerCase())
+    ) {
+      newErrors.brand = "Выберите марку из списка.";
+    }
 
     const trimmedRegion = form.region.trim();
     if (!trimmedRegion) {
@@ -333,7 +359,8 @@ const formatPhone = (raw: string) => {
       Mileage: Number(form.mileage),
       HasDocumentIssues: form.hasDocProblems,
       NeedsRepair: form.needsRepair,
-      Region: form.region.trim(),
+      Brand: { id: "", name: form.brand.trim() },
+      Region: { id: "", name: form.region.trim() },
       City: form.city.trim(),
       PhoneNumber: form.phone.trim(),
     };
@@ -401,11 +428,18 @@ const formatPhone = (raw: string) => {
                 <input
                   type="text"
                   className={`form-input ${errors.brand ? "form-input--error" : ""}`}
-                  placeholder="Например, Lada"
+                  placeholder="Начните вводить марку"
                   value={form.brand}
                   onChange={handleChange("brand")}
+                  list="brand-suggestions"
                 />
+                <datalist id="brand-suggestions">
+                  {brands.map((brand) => (
+                    <option key={brand} value={brand} />
+                  ))}
+                </datalist>
                 {errors.brand && <p className="form-error">{errors.brand}</p>}
+                {brandsError && <p className="form-error">{brandsError}</p>}
               </div>
 
               <div className="form-field">

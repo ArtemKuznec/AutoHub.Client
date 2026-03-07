@@ -22,6 +22,11 @@ export type CarColor =
 
 export type EngineType = 1 | 2; // 1 = Petrol, 2 = Diesel
 
+export type NamedEntityRef = {
+  id: string;
+  name: string;
+};
+
 export type CreateAdRequest = {
   VinOrBodyNumber: string;
   StsNumber: string | null;
@@ -39,7 +44,8 @@ export type CreateAdRequest = {
   Mileage: number;
   HasDocumentIssues: boolean;
   NeedsRepair: boolean;
-  Region: string;
+  Brand: NamedEntityRef;
+  Region: NamedEntityRef;
   City: string;
   PhoneNumber: string;
 };

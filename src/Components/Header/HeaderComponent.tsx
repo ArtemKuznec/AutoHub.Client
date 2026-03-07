@@ -34,8 +34,8 @@ const HeaderComponent: FC<HeaderProps> = ({ onCreateAdClick, onCarAdsClick: onCa
     <header className="header">
       <div className="header-left">
         <div className="header-logo">
-          <img src={autoIcon} alt="AutoBase" />
-          <p className="header-title">AutoBase</p>
+          <img src={autoIcon} alt="AutoHub" />
+          <p className="header-title">AutoHub</p>
         </div>
 
         <button className="header-region" type="button">
