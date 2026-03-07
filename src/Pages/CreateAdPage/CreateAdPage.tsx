@@ -1,4 +1,12 @@
 import { useState, type FC, type ChangeEvent, type FormEvent } from "react";
+import {
+  carAdService,
+  type BodyType as BodyTypeServer,
+  type CarColor as CarColorServer,
+  type CreateAdRequest,
+  type EngineType as EngineTypeServer,
+  type SteeringWheelSide as SteeringWheelSideServer,
+} from "../../Services/carAdService";
 import Header from "../../Components/Header/HeaderComponent";
 import "./CreateAdPage.css";
 
@@ -103,6 +111,7 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
   const [form, setForm] = useState<CreateAdFormState>(INITIAL_STATE);
   const [errors, setErrors] = useState<CreateAdFormErrors>({});
   const [submittedSuccessfully, setSubmittedSuccessfully] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleChange =
     (field: keyof CreateAdFormState) =>
@@ -194,24 +203,86 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSubmittedSuccessfully(false);
+    setSubmitError(null);
 
     if (!validate()) return;
 
-    const payload = {
-      ...form,
-      engineVolume: Number(form.engineVolume.replace(",", ".")),
-      ownersCount: Number(form.ownersCount),
-      mileage: Number(form.mileage),
+    const mapSteeringToServer = (value: SteeringPosition): SteeringWheelSideServer => {
+      return value === "left" ? 1 : 2;
     };
 
-    // Временная имитация отправки на сервер
-    // eslint-disable-next-line no-console
-    console.log("Создание объявления (демо):", payload);
+    const mapBodyTypeToServer = (value: BodyType): BodyTypeServer => {
+      switch (value) {
+        case "sedan":
+          return 1;
+        case "hatchback":
+          return 2;
+        case "suv":
+          return 3;
+        case "wagon":
+        default:
+          return 4;
+      }
+    };
 
-    setSubmittedSuccessfully(true);
+    const mapEngineTypeToServer = (value: EngineType): EngineTypeServer => {
+      return value === "diesel" ? 2 : 1;
+    };
+
+    const mapColorToServer = (value: string): CarColorServer => {
+      switch (value) {
+        case "white":
+          return 1;
+        case "black":
+          return 2;
+        case "silver":
+          return 3;
+        case "gray":
+          return 4;
+        case "red":
+          return 5;
+        case "blue":
+          return 6;
+        default:
+          return 99;
+      }
+    };
+
+    const body: CreateAdRequest = {
+      VinOrBodyNumber: form.vin.trim(),
+      StsNumber: form.sts.trim() || null,
+      Make: form.brand.trim(),
+      Model: form.model.trim(),
+      SteeringWheelSide: mapSteeringToServer(form.steering),
+      BodyType: mapBodyTypeToServer(form.bodyType),
+      Generation: form.generation.trim() || null,
+      EngineVolume: Number(form.engineVolume.replace(",", ".")),
+      EngineType: mapEngineTypeToServer(form.engineType),
+      HasGBO: form.hasGbo,
+      Color: mapColorToServer(form.color),
+      ColorDescription: form.colorDetails.trim() || null,
+      OwnersCount: Number(form.ownersCount),
+      Mileage: Number(form.mileage),
+      HasDocumentIssues: form.hasDocProblems,
+      NeedsRepair: form.needsRepair,
+      City: form.city.trim(),
+      PhoneNumber: form.phone.trim(),
+    };
+
+    try {
+      await carAdService.createAd(body);
+      setSubmittedSuccessfully(true);
+      setForm(INITIAL_STATE);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Ошибка при создании объявления.",
+      );
+      // eslint-disable-next-line no-console
+      console.error("Ошибка при создании объявления:", error);
+    }
   };
 
   return (
@@ -563,7 +634,6 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
             </div>
           </section>
 
-          {/* Кнопка отправки */}
           <div className="form-submit-wrapper">
             <button type="submit" className="submit-button">
               Создать объявление
@@ -573,6 +643,7 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
                 Объявление успешно создано (демо). Данные отправлены в консоль.
               </p>
             )}
+            {submitError && <p className="submit-error">{submitError}</p>}
           </div>
         </form>
       </main>
