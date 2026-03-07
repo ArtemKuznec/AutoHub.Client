@@ -1,4 +1,4 @@
-import { useState, type FC, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type FC, type ChangeEvent, type FormEvent } from "react";
 import {
   carAdService,
   type BodyType as BodyTypeServer,
@@ -7,6 +7,7 @@ import {
   type EngineType as EngineTypeServer,
   type SteeringWheelSide as SteeringWheelSideServer,
 } from "../../Services/carAdService";
+import { regionService } from "../../Services/regionService";
 import Header from "../../Components/Header/HeaderComponent";
 import "./CreateAdPage.css";
 
@@ -31,6 +32,7 @@ type CreateAdFormState = {
   mileage: string;
   hasDocProblems: boolean;
   needsRepair: boolean;
+    region: string;
   city: string;
   phone: string;
   photos: File[];
@@ -60,18 +62,28 @@ const INITIAL_STATE: CreateAdFormState = {
   mileage: "",
   hasDocProblems: false,
   needsRepair: false,
+  region: "",
   city: "",
   phone: "",
   photos: [],
 };
 
 const COLOR_PRESETS: { value: string; label: string; cssColor: string }[] = [
-  { value: "red", label: "Красный", cssColor: "#ef4444" },
-  { value: "blue", label: "Синий", cssColor: "#3b82f6" },
-  { value: "black", label: "Черный", cssColor: "#111827" },
   { value: "white", label: "Белый", cssColor: "#f9fafb" },
+  { value: "black", label: "Черный", cssColor: "#111827" },
   { value: "silver", label: "Серебристый", cssColor: "#d1d5db" },
   { value: "gray", label: "Серый", cssColor: "#6b7280" },
+  { value: "red", label: "Красный", cssColor: "#ef4444" },
+  { value: "blue", label: "Синий", cssColor: "#3b82f6" },
+  { value: "green", label: "Зеленый", cssColor: "#22c55e" },
+  { value: "yellow", label: "Желтый", cssColor: "#eab308" },
+  { value: "brown", label: "Коричневый", cssColor: "#92400e" },
+  { value: "beige", label: "Бежевый", cssColor: "#f5deb3" },
+  { value: "gold", label: "Золотистый", cssColor: "#f59e0b" },
+  { value: "orange", label: "Оранжевый", cssColor: "#f97316" },
+  { value: "purple", label: "Фиолетовый", cssColor: "#a855f7" },
+  { value: "pink", label: "Розовый", cssColor: "#ec4899" },
+  { value: "lightBlue", label: "Голубой", cssColor: "#60a5fa" },
 ];
 
 const formatPhone = (raw: string) => {
@@ -107,11 +119,13 @@ const formatPhone = (raw: string) => {
   return value;
 };
 
-const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
+  const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
   const [form, setForm] = useState<CreateAdFormState>(INITIAL_STATE);
   const [errors, setErrors] = useState<CreateAdFormErrors>({});
   const [submittedSuccessfully, setSubmittedSuccessfully] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [regions, setRegions] = useState<string[]>([]);
+  const [regionsError, setRegionsError] = useState<string | null>(null);
 
   const handleChange =
     (field: keyof CreateAdFormState) =>
@@ -152,6 +166,29 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
       photos: Array.from(files),
     }));
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRegions = async () => {
+      try {
+        const list = await regionService.getAllRegions();
+        if (!isMounted) return;
+        setRegions(list);
+      } catch (error) {
+        if (!isMounted) return;
+        setRegionsError("Не удалось загрузить список регионов.");
+        // eslint-disable-next-line no-console
+        console.error("Ошибка при загрузке регионов:", error);
+      }
+    };
+
+    loadRegions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const validate = (): boolean => {
     const newErrors: CreateAdFormErrors = {};
@@ -194,6 +231,16 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
     }
 
     if (!form.city.trim()) newErrors.city = "Укажите город продажи.";
+
+    const trimmedRegion = form.region.trim();
+    if (!trimmedRegion) {
+      newErrors.region = "не указан регион";
+    } else if (
+      regions.length > 0 &&
+      !regions.some((region) => region.toLowerCase() === trimmedRegion.toLowerCase())
+    ) {
+      newErrors.region = "Выберите регион из списка.";
+    }
 
     if (!form.phone.trim()) {
       newErrors.phone = "Укажите номер телефона.";
@@ -246,6 +293,24 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
           return 5;
         case "blue":
           return 6;
+        case "green":
+          return 7;
+        case "yellow":
+          return 8;
+        case "brown":
+          return 9;
+        case "beige":
+          return 10;
+        case "gold":
+          return 11;
+        case "orange":
+          return 12;
+        case "purple":
+          return 13;
+        case "pink":
+          return 14;
+        case "lightBlue":
+          return 15;
         default:
           return 99;
       }
@@ -268,6 +333,7 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
       Mileage: Number(form.mileage),
       HasDocumentIssues: form.hasDocProblems,
       NeedsRepair: form.needsRepair,
+      Region: form.region.trim(),
       City: form.city.trim(),
       PhoneNumber: form.phone.trim(),
     };
@@ -496,18 +562,18 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
                     style={{ backgroundColor: color.cssColor }}
                     onClick={() => handleColorSelect(color.value)}
                     aria-label={color.label}
+                    title={color.label}
                   />
                 ))}
               </div>
+              {form.color && (
+                <p className="color-hint">
+                  Выбранный цвет:{" "}
+                  {COLOR_PRESETS.find((c) => c.value === form.color)?.label ?? form.color}
+                </p>
+              )}
               {errors.color && <p className="form-error">{errors.color}</p>}
 
-              <input
-                type="text"
-                className="form-input form-input--inline"
-                placeholder="Уточните оттенок, например: темно-синий металлик"
-                value={form.colorDetails}
-                onChange={handleChange("colorDetails")}
-              />
             </div>
 
             <div className="form-grid two-columns">
@@ -579,17 +645,29 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
                   placeholder="Например, Омск"
                   value={form.city}
                   onChange={handleChange("city")}
-                  list="city-suggestions"
                 />
-                <datalist id="city-suggestions">
-                  <option value="Москва" />
-                  <option value="Санкт-Петербург" />
-                  <option value="Новосибирск" />
-                  <option value="Екатеринбург" />
-                  <option value="Омск" />
-                  <option value="Казань" />
-                </datalist>
                 {errors.city && <p className="form-error">{errors.city}</p>}
+              </div>
+
+              <div className="form-field">
+                <label className="form-label">
+                  Регион продажи <span className="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  className={`form-input ${errors.region ? "form-input--error" : ""}`}
+                  placeholder="Начните вводить регион"
+                  value={form.region}
+                  onChange={handleChange("region")}
+                  list="region-suggestions"
+                />
+                <datalist id="region-suggestions">
+                  {regions.map((region) => (
+                    <option key={region} value={region} />
+                  ))}
+                </datalist>
+                {errors.region && <p className="form-error">{errors.region}</p>}
+                {regionsError && <p className="form-error">{regionsError}</p>}
               </div>
 
               <div className="form-field">

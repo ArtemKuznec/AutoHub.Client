@@ -39,6 +39,7 @@ export type CreateAdRequest = {
   Mileage: number;
   HasDocumentIssues: boolean;
   NeedsRepair: boolean;
+  Region: string;
   City: string;
   PhoneNumber: string;
 };
