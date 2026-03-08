@@ -1,26 +1,28 @@
-export type SteeringWheelSide = 1 | 2; // 1 = Left, 2 = Right
+import { API_BASE_URL } from "../config/api";
 
-export type BodyType = 1 | 2 | 3 | 4; // 1 = Sedan, 2 = Hatchback, 3 = Suv, 4 = Wagon
+export type SteeringWheelSide = 1 | 2;
+
+export type BodyType = 1 | 2 | 3 | 4;
 
 export type CarColor =
-  | 1 // White
-  | 2 // Black
-  | 3 // Silver
-  | 4 // Gray
-  | 5 // Red
-  | 6 // Blue
-  | 7 // Green
-  | 8 // Yellow
-  | 9 // Brown
-  | 10 // Beige
-  | 11 // Gold
-  | 12 // Orange
-  | 13 // Purple
-  | 14 // Pink
-  | 15 // LightBlue
-  | 99; // Other
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 99;
 
-export type EngineType = 1 | 2; // 1 = Petrol, 2 = Diesel
+export type EngineType = 1 | 2;
 
 export type NamedEntityRef = {
   id: string;
@@ -50,12 +52,10 @@ export type CreateAdRequest = {
   PhoneNumber: string;
 };
 
-const DEFAULT_BASE_URL = "https://localhost:7194/api";
-
 export class CarAdService {
   private readonly baseUrl: string;
 
-  constructor(baseUrl: string = DEFAULT_BASE_URL) {
+  constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
   }
 

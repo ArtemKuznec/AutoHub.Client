@@ -1,21 +1,20 @@
-const DEFAULT_BASE_URL = "https://localhost:7194/api";
+import { API_BASE_URL } from "../config/api";
+
 const REGIONS_SESSION_KEY = "regions";
 
 export class RegionService {
   private readonly baseUrl: string;
   private cachedRegions: string[] | null = null;
 
-  constructor(baseUrl: string = DEFAULT_BASE_URL) {
+  constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
   }
 
   async getAllRegions(): Promise<string[]> {
-    // 1. Память внутри приложения
     if (this.cachedRegions) {
       return this.cachedRegions;
     }
 
-    // 2. sessionStorage (если доступен, т.е. в браузере)
     if (typeof window !== "undefined" && window.sessionStorage) {
       const cached = window.sessionStorage.getItem(REGIONS_SESSION_KEY);
       if (cached) {
@@ -26,12 +25,10 @@ export class RegionService {
             return this.cachedRegions;
           }
         } catch {
-          // игнорируем ошибки парсинга и идём за свежими данными
         }
       }
     }
 
-    // 3. Запрос к API
     const response = await fetch(`${this.baseUrl}/regions`, {
       method: "GET",
       headers: {
@@ -48,7 +45,6 @@ export class RegionService {
           message = text;
         }
       } catch {
-        // ignore
       }
 
       throw new Error(message);
@@ -76,7 +72,6 @@ export class RegionService {
       try {
         window.sessionStorage.setItem(REGIONS_SESSION_KEY, JSON.stringify(regions));
       } catch {
-        // ignore storage errors
       }
     }
 

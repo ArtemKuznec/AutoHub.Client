@@ -1,11 +1,12 @@
-const DEFAULT_BASE_URL = "https://localhost:7194/api";
+import { API_BASE_URL } from "../config/api";
+
 const BRANDS_SESSION_KEY = "brands";
 
 export class BrandService {
   private readonly baseUrl: string;
   private cachedBrands: string[] | null = null;
 
-  constructor(baseUrl: string = DEFAULT_BASE_URL) {
+  constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
   }
 
@@ -24,7 +25,6 @@ export class BrandService {
             return this.cachedBrands;
           }
         } catch {
-          // ignore parse errors
         }
       }
     }
@@ -45,7 +45,6 @@ export class BrandService {
           message = text;
         }
       } catch {
-        // ignore
       }
 
       throw new Error(message);
@@ -73,7 +72,6 @@ export class BrandService {
       try {
         window.sessionStorage.setItem(BRANDS_SESSION_KEY, JSON.stringify(brands));
       } catch {
-        // ignore storage errors
       }
     }
 

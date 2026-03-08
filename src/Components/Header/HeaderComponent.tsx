@@ -1,5 +1,7 @@
 import type { FC } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { authService } from "../../Services/authService";
 import "./HeaderComponent.css";
 import autoIcon from "../../assets/autobase-icon.png";
 import markerIcon from "../../assets/marker-icon.png";
@@ -11,6 +13,7 @@ type HeaderProps = {
 
 const HeaderComponent: FC<HeaderProps> = ({ onCreateAdClick, onCarAdsClick: onCarsLinkClick }) => {
   const navigate = useNavigate();
+  const { isAuthenticated, setAuthenticated } = useAuth();
 
   const handleCreateAdClick = () => {
     if (onCreateAdClick) {
@@ -18,7 +21,21 @@ const HeaderComponent: FC<HeaderProps> = ({ onCreateAdClick, onCarAdsClick: onCa
       return;
     }
 
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
     navigate("/create-ad");
+  };
+
+  const handleAuthClick = () => {
+    if (isAuthenticated) {
+      authService.logout();
+      setAuthenticated(false);
+      navigate("/main");
+    } else {
+      navigate("/login");
+    }
   };
 
   const handleCarsPageClick = () => {
@@ -52,8 +69,8 @@ const HeaderComponent: FC<HeaderProps> = ({ onCreateAdClick, onCarAdsClick: onCa
       </div>
 
       <div className="header-right">
-        <button className="header-login" type="button">
-          Вход и регистрация
+        <button className="header-login" type="button" onClick={handleAuthClick}>
+          {isAuthenticated ? "Выйти" : "Вход и регистрация"}
         </button>
         <button className="header-submit" type="button" onClick={handleCreateAdClick}>
           Подать объявление

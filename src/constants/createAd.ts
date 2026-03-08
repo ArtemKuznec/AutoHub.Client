@@ -1,0 +1,42 @@
+import type { CreateAdFormState, ColorPreset } from "../types/createAd";
+
+export const CREATE_AD_INITIAL_STATE: CreateAdFormState = {
+  vin: "",
+  sts: "",
+  brand: "",
+  model: "",
+  steering: "",
+  bodyType: "",
+  generation: "",
+  engineVolume: "",
+  engineType: "",
+  hasGbo: false,
+  color: "",
+  colorDetails: "",
+  ownersCount: "",
+  mileage: "",
+  hasDocProblems: false,
+  needsRepair: false,
+  region: "",
+  city: "",
+  phone: "",
+  photos: [],
+};
+
+export const COLOR_PRESETS: ColorPreset[] = [
+  { value: "white", label: "Белый", cssColor: "#f9fafb" },
+  { value: "black", label: "Черный", cssColor: "#111827" },
+  { value: "silver", label: "Серебристый", cssColor: "#d1d5db" },
+  { value: "gray", label: "Серый", cssColor: "#6b7280" },
+  { value: "red", label: "Красный", cssColor: "#ef4444" },
+  { value: "blue", label: "Синий", cssColor: "#3b82f6" },
+  { value: "green", label: "Зеленый", cssColor: "#22c55e" },
+  { value: "yellow", label: "Желтый", cssColor: "#eab308" },
+  { value: "brown", label: "Коричневый", cssColor: "#92400e" },
+  { value: "beige", label: "Бежевый", cssColor: "#f5deb3" },
+  { value: "gold", label: "Золотистый", cssColor: "#f59e0b" },
+  { value: "orange", label: "Оранжевый", cssColor: "#f97316" },
+  { value: "purple", label: "Фиолетовый", cssColor: "#a855f7" },
+  { value: "pink", label: "Розовый", cssColor: "#ec4899" },
+  { value: "lightBlue", label: "Голубой", cssColor: "#60a5fa" },
+];

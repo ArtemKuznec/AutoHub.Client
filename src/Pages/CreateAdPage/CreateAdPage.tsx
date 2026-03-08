@@ -1,127 +1,27 @@
 import { useEffect, useState, type FC, type ChangeEvent, type FormEvent } from "react";
-import {
-  carAdService,
-  type BodyType as BodyTypeServer,
-  type CarColor as CarColorServer,
-  type CreateAdRequest,
-  type EngineType as EngineTypeServer,
-  type SteeringWheelSide as SteeringWheelSideServer,
-} from "../../Services/carAdService";
+import { carAdService, type CreateAdRequest } from "../../Services/carAdService";
 import { regionService } from "../../Services/regionService";
 import { brandService } from "../../Services/brandService";
 import Header from "../../Components/Header/HeaderComponent";
+import type {
+  CreateAdFormErrors,
+  CreateAdFormState,
+  CreateAdPageProps,
+  SteeringPosition,
+  EngineType,
+} from "../../types/createAd";
+import { CREATE_AD_INITIAL_STATE, COLOR_PRESETS } from "../../constants/createAd";
+import { formatPhone } from "../../utils/formatPhone";
+import {
+  mapSteeringToServer,
+  mapBodyTypeToServer,
+  mapEngineTypeToServer,
+  mapColorToServer,
+} from "../../utils/createAdMappers";
 import "./CreateAdPage.css";
 
-type SteeringPosition = "left" | "right" | "";
-type BodyType = "sedan" | "hatchback" | "suv" | "wagon" | "";
-type EngineType = "diesel" | "petrol" | "";
-
-type CreateAdFormState = {
-  vin: string;
-  sts: string;
-  brand: string;
-  model: string;
-  steering: SteeringPosition;
-  bodyType: BodyType;
-  generation: string;
-  engineVolume: string;
-  engineType: EngineType;
-  hasGbo: boolean;
-  color: string;
-  colorDetails: string;
-  ownersCount: string;
-  mileage: string;
-  hasDocProblems: boolean;
-  needsRepair: boolean;
-    region: string;
-  city: string;
-  phone: string;
-  photos: File[];
-};
-
-type CreateAdFormErrors = Partial<Record<keyof CreateAdFormState, string>>;
-
-type CreateAdPageProps = {
-  onCreateAdClick?: () => void;
-  onGoHomeClick?: () => void;
-};
-
-const INITIAL_STATE: CreateAdFormState = {
-  vin: "",
-  sts: "",
-  brand: "",
-  model: "",
-  steering: "",
-  bodyType: "",
-  generation: "",
-  engineVolume: "",
-  engineType: "",
-  hasGbo: false,
-  color: "",
-  colorDetails: "",
-  ownersCount: "",
-  mileage: "",
-  hasDocProblems: false,
-  needsRepair: false,
-  region: "",
-  city: "",
-  phone: "",
-  photos: [],
-};
-
-const COLOR_PRESETS: { value: string; label: string; cssColor: string }[] = [
-  { value: "white", label: "Белый", cssColor: "#f9fafb" },
-  { value: "black", label: "Черный", cssColor: "#111827" },
-  { value: "silver", label: "Серебристый", cssColor: "#d1d5db" },
-  { value: "gray", label: "Серый", cssColor: "#6b7280" },
-  { value: "red", label: "Красный", cssColor: "#ef4444" },
-  { value: "blue", label: "Синий", cssColor: "#3b82f6" },
-  { value: "green", label: "Зеленый", cssColor: "#22c55e" },
-  { value: "yellow", label: "Желтый", cssColor: "#eab308" },
-  { value: "brown", label: "Коричневый", cssColor: "#92400e" },
-  { value: "beige", label: "Бежевый", cssColor: "#f5deb3" },
-  { value: "gold", label: "Золотистый", cssColor: "#f59e0b" },
-  { value: "orange", label: "Оранжевый", cssColor: "#f97316" },
-  { value: "purple", label: "Фиолетовый", cssColor: "#a855f7" },
-  { value: "pink", label: "Розовый", cssColor: "#ec4899" },
-  { value: "lightBlue", label: "Голубой", cssColor: "#60a5fa" },
-];
-
-const formatPhone = (raw: string) => {
-  const digits = raw.replace(/\D/g, "");
-
-  let value = "+7";
-  let index = 0;
-
-  if (digits.startsWith("7")) {
-    index = 1;
-  } else if (digits.startsWith("8")) {
-    index = 1;
-  }
-
-  const rest = digits.slice(index);
-
-  if (rest.length > 0) {
-    value += " (" + rest.slice(0, 3);
-  }
-  if (rest.length >= 3) {
-    value += ") ";
-  }
-  if (rest.length > 3) {
-    value += rest.slice(3, 6);
-  }
-  if (rest.length >= 6) {
-    value += "-" + rest.slice(6, 8);
-  }
-  if (rest.length >= 8) {
-    value += "-" + rest.slice(8, 10);
-  }
-
-  return value;
-};
-
-  const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
-  const [form, setForm] = useState<CreateAdFormState>(INITIAL_STATE);
+const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
+  const [form, setForm] = useState<CreateAdFormState>(CREATE_AD_INITIAL_STATE);
   const [errors, setErrors] = useState<CreateAdFormErrors>({});
   const [submittedSuccessfully, setSubmittedSuccessfully] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -181,7 +81,6 @@ const formatPhone = (raw: string) => {
       } catch (error) {
         if (!isMounted) return;
         setRegionsError("Не удалось загрузить список регионов.");
-        // eslint-disable-next-line no-console
         console.error("Ошибка при загрузке регионов:", error);
       }
     };
@@ -194,7 +93,6 @@ const formatPhone = (raw: string) => {
       } catch (error) {
         if (!isMounted) return;
         setBrandsError("Не удалось загрузить список брендов.");
-        // eslint-disable-next-line no-console
         console.error("Ошибка при загрузке брендов:", error);
       }
     };
@@ -283,65 +181,6 @@ const formatPhone = (raw: string) => {
 
     if (!validate()) return;
 
-    const mapSteeringToServer = (value: SteeringPosition): SteeringWheelSideServer => {
-      return value === "left" ? 1 : 2;
-    };
-
-    const mapBodyTypeToServer = (value: BodyType): BodyTypeServer => {
-      switch (value) {
-        case "sedan":
-          return 1;
-        case "hatchback":
-          return 2;
-        case "suv":
-          return 3;
-        case "wagon":
-        default:
-          return 4;
-      }
-    };
-
-    const mapEngineTypeToServer = (value: EngineType): EngineTypeServer => {
-      return value === "diesel" ? 2 : 1;
-    };
-
-    const mapColorToServer = (value: string): CarColorServer => {
-      switch (value) {
-        case "white":
-          return 1;
-        case "black":
-          return 2;
-        case "silver":
-          return 3;
-        case "gray":
-          return 4;
-        case "red":
-          return 5;
-        case "blue":
-          return 6;
-        case "green":
-          return 7;
-        case "yellow":
-          return 8;
-        case "brown":
-          return 9;
-        case "beige":
-          return 10;
-        case "gold":
-          return 11;
-        case "orange":
-          return 12;
-        case "purple":
-          return 13;
-        case "pink":
-          return 14;
-        case "lightBlue":
-          return 15;
-        default:
-          return 99;
-      }
-    };
-
     const body: CreateAdRequest = {
       VinOrBodyNumber: form.vin.trim(),
       StsNumber: form.sts.trim() || null,
@@ -368,12 +207,11 @@ const formatPhone = (raw: string) => {
     try {
       await carAdService.createAd(body);
       setSubmittedSuccessfully(true);
-      setForm(INITIAL_STATE);
+      setForm(CREATE_AD_INITIAL_STATE);
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : "Ошибка при создании объявления.",
       );
-      // eslint-disable-next-line no-console
       console.error("Ошибка при создании объявления:", error);
     }
   };
@@ -386,7 +224,6 @@ const formatPhone = (raw: string) => {
         <h1 className="create-ad-title">Создание объявления о продаже авто</h1>
 
         <form className="create-ad-form" onSubmit={handleSubmit} noValidate>
-          {/* Блок 1: Идентификация автомобиля */}
           <section className="form-block">
             <h2 className="form-block-title">Идентификация автомобиля</h2>
 
@@ -416,7 +253,6 @@ const formatPhone = (raw: string) => {
             </div>
           </section>
 
-          {/* Блок 2: Основные характеристики */}
           <section className="form-block">
             <h2 className="form-block-title">Основные характеристики</h2>
 
@@ -516,7 +352,6 @@ const formatPhone = (raw: string) => {
             </div>
           </section>
 
-          {/* Блок 3: Силовой агрегат */}
           <section className="form-block">
             <h2 className="form-block-title">Силовой агрегат</h2>
 
@@ -577,7 +412,6 @@ const formatPhone = (raw: string) => {
             </div>
           </section>
 
-          {/* Блок 4: Внешний вид и состояние */}
           <section className="form-block">
             <h2 className="form-block-title">Внешний вид и состояние</h2>
 
@@ -644,7 +478,6 @@ const formatPhone = (raw: string) => {
             </div>
           </section>
 
-          {/* Блок 5: Юридическая информация и контакты */}
           <section className="form-block">
             <h2 className="form-block-title">Юридическая информация и контакты</h2>
 
@@ -722,7 +555,6 @@ const formatPhone = (raw: string) => {
             </div>
           </section>
 
-          {/* Блок 6: Медиа */}
           <section className="form-block">
             <h2 className="form-block-title">Фотографии</h2>
             <div className="form-field">
