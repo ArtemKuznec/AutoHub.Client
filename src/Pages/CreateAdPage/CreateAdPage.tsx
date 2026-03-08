@@ -1,4 +1,4 @@
-import { useEffect, useState, type FC, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FC, type ChangeEvent, type FormEvent } from "react";
 import { carAdService, type CreateAdRequest } from "../../Services/carAdService";
 import { regionService } from "../../Services/regionService";
 import { brandService } from "../../Services/brandService";
@@ -29,6 +29,21 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
   const [regionsError, setRegionsError] = useState<string | null>(null);
   const [brands, setBrands] = useState<string[]>([]);
   const [brandsError, setBrandsError] = useState<string | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [openedPhotoIndex, setOpenedPhotoIndex] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (form.photos.length === 0) {
+      setPhotoUrls([]);
+      return;
+    }
+    const urls = form.photos.map((file) => URL.createObjectURL(file));
+    setPhotoUrls(urls);
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [form.photos]);
 
   const handleChange =
     (field: keyof CreateAdFormState) =>
@@ -62,12 +77,30 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
 
   const handlePhotosChange = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
+    const newFiles = Array.from(files);
     setForm((prev) => ({
       ...prev,
-      photos: Array.from(files),
+      photos: [...prev.photos, ...newFiles],
     }));
+    event.target.value = "";
+  };
+
+  const handleAddPhotosClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index),
+    }));
+    setOpenedPhotoIndex((prev) => {
+      if (prev === null) return null;
+      if (prev === index) return null;
+      return prev > index ? prev - 1 : prev;
+    });
   };
 
   useEffect(() => {
@@ -116,8 +149,8 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
     if (!form.engineVolume.trim()) {
       newErrors.engineVolume = "Укажите объем двигателя.";
     } else {
-      const volume = Number(form.engineVolume.replace(",", "."));
-      if (Number.isNaN(volume) || volume <= 0) {
+      const normolizedVolume = Number(form.engineVolume.replace(",", "."));
+      if (Number.isNaN(normolizedVolume) || normolizedVolume <= 0) {
         newErrors.engineVolume = "Введите корректный объем двигателя.";
       }
     }
@@ -184,12 +217,12 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
     const body: CreateAdRequest = {
       VinOrBodyNumber: form.vin.trim(),
       StsNumber: form.sts.trim() || null,
-      Make: form.brand.trim(),
+      Brand: { id: "", name: form.brand.trim() },
       Model: form.model.trim(),
       SteeringWheelSide: mapSteeringToServer(form.steering),
       BodyType: mapBodyTypeToServer(form.bodyType),
       Generation: form.generation.trim() || null,
-      EngineVolume: Number(form.engineVolume.replace(",", ".")),
+      EngineVolume: Number(form.engineVolume),
       EngineType: mapEngineTypeToServer(form.engineType),
       HasGBO: form.hasGbo,
       Color: mapColorToServer(form.color),
@@ -198,14 +231,13 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
       Mileage: Number(form.mileage),
       HasDocumentIssues: form.hasDocProblems,
       NeedsRepair: form.needsRepair,
-      Brand: { id: "", name: form.brand.trim() },
       Region: { id: "", name: form.region.trim() },
       City: form.city.trim(),
       PhoneNumber: form.phone.trim(),
     };
 
     try {
-      await carAdService.createAd(body);
+      await carAdService.createAd(body, form.photos);
       setSubmittedSuccessfully(true);
       setForm(CREATE_AD_INITIAL_STATE);
     } catch (error) {
@@ -560,21 +592,76 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
             <div className="form-field">
               <label className="form-label">Добавьте фотографии автомобиля</label>
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handlePhotosChange}
-                className="form-file-input"
+                className="form-file-input form-file-input--hidden"
+                aria-label="Выберите фотографии"
               />
+              <button
+                type="button"
+                className="form-file-button"
+                onClick={handleAddPhotosClick}
+              >
+                Выбрать фотографии
+              </button>
               {form.photos.length > 0 && (
-                <ul className="photos-preview-list">
-                  {form.photos.map((file) => (
-                    <li key={file.name} className="photos-preview-item">
-                      {file.name}
-                    </li>
+                <div className="photos-thumbnails">
+                  {form.photos.map((file, index) => (
+                    <div key={`${file.name}-${index}`} className="photos-thumbnail-wrap">
+                      <button
+                        type="button"
+                        className="photos-thumbnail-remove"
+                        onClick={() => handleRemovePhoto(index)}
+                        aria-label="Удалить фото"
+                      >
+                        ×
+                      </button>
+                      <button
+                        type="button"
+                        className="photos-thumbnail"
+                        onClick={() => setOpenedPhotoIndex(index)}
+                      >
+                        {photoUrls[index] ? (
+                          <img
+                            src={photoUrls[index]}
+                            alt={file.name}
+                            className="photos-thumbnail-img"
+                          />
+                        ) : (
+                          <span className="photos-thumbnail-placeholder">...</span>
+                        )}
+                      </button>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
+            {openedPhotoIndex !== null && photoUrls[openedPhotoIndex] && (
+              <div
+                className="photos-modal-overlay"
+                onClick={() => setOpenedPhotoIndex(null)}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Просмотр фото"
+              >
+                <button
+                  type="button"
+                  className="photos-modal-close"
+                  onClick={() => setOpenedPhotoIndex(null)}
+                  aria-label="Закрыть"
+                >
+                  ×
+                </button>
+                <img
+                  src={photoUrls[openedPhotoIndex]}
+                  alt={form.photos[openedPhotoIndex]?.name ?? "Фото"}
+                  className="photos-modal-img"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            )}
             </div>
           </section>
 
@@ -584,7 +671,7 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
             </button>
             {submittedSuccessfully && (
               <p className="submit-success">
-                Объявление успешно создано (демо). Данные отправлены в консоль.
+                Объявление успешно создано.
               </p>
             )}
             {submitError && <p className="submit-error">{submitError}</p>}

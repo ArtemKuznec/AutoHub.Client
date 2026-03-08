@@ -32,7 +32,7 @@ export type NamedEntityRef = {
 export type CreateAdRequest = {
   VinOrBodyNumber: string;
   StsNumber: string | null;
-  Make: string;
+  Brand: NamedEntityRef;
   Model: string;
   SteeringWheelSide: SteeringWheelSide;
   BodyType: BodyType;
@@ -46,7 +46,6 @@ export type CreateAdRequest = {
   Mileage: number;
   HasDocumentIssues: boolean;
   NeedsRepair: boolean;
-  Brand: NamedEntityRef;
   Region: NamedEntityRef;
   City: string;
   PhoneNumber: string;
@@ -54,35 +53,89 @@ export type CreateAdRequest = {
 
 export class CarAdService {
   private readonly baseUrl: string;
+  private readonly TOKEN_KEY = 'auth_token';
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
   }
 
-  async createAd(request: CreateAdRequest): Promise<void> {
+  private getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  private getAuthHeaders(): HeadersInit {
+    const token = this.getToken();
+    return token ? {
+      'Authorization': `Bearer ${token}`
+    } : {};
+  }
+
+  async createAd(request: CreateAdRequest, photos: File[] = []): Promise<void> {
+    const token = this.getToken();
+    
+    if (!token) {
+      throw new Error("Токен авторизации отсутствует. Пожалуйста, выполните вход.");
+    }
+
+    const formData = new FormData();
+
+    formData.append("VinOrBodyNumber", request.VinOrBodyNumber);
+    if (request.StsNumber != null) formData.append("StsNumber", request.StsNumber);
+    formData.append("Brand.Id", request.Brand.id);
+    formData.append("Brand.Name", request.Brand.name);
+    formData.append("Model", request.Model);
+    formData.append("SteeringWheelSide", String(request.SteeringWheelSide));
+    formData.append("BodyType", String(request.BodyType));
+    if (request.Generation != null) formData.append("Generation", request.Generation);
+    formData.append("EngineVolume", request.EngineVolume.toString().replace(".", ","));
+    formData.append("EngineType", String(request.EngineType));
+    formData.append("HasGBO", String(request.HasGBO));
+    formData.append("Color", String(request.Color));
+    if (request.ColorDescription != null) formData.append("ColorDescription", request.ColorDescription);
+    formData.append("OwnersCount", String(request.OwnersCount));
+    formData.append("Mileage", String(request.Mileage));
+    formData.append("HasDocumentIssues", String(request.HasDocumentIssues));
+    formData.append("NeedsRepair", String(request.NeedsRepair));
+    formData.append("Region.Id", request.Region.id);
+    formData.append("Region.Name", request.Region.name);
+    formData.append("City", request.City);
+    formData.append("PhoneNumber", request.PhoneNumber);
+
+    photos.forEach((photo) => {
+      formData.append("LinkedPhotos", photo);
+    });
+
     const response = await fetch(`${this.baseUrl}/cars`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(request),
+      body: formData,
     });
 
     if (!response.ok) {
-      let message = `Не удалось создать объявление. Код статуса: ${response.status}`;
+      if (response.status === 401) {
+        localStorage.removeItem(this.TOKEN_KEY);
+        throw new Error("Сессия истекла. Пожалуйста, выполните вход заново.");
+      }
 
+      let message = `Не удалось создать объявление. Код статуса: ${response.status}`;
       try {
-        const text = await response.text();
-        if (text) {
-          message = text;
+        const errorData = await response.text();
+        if (errorData) {
+          message = errorData;
         }
       } catch {
-        
       }
 
       throw new Error(message);
     }
   }
+
+  isAuthenticated(): boolean {
+    return !!this.getToken();
+  }
+
 }
 
 export const carAdService = new CarAdService();
