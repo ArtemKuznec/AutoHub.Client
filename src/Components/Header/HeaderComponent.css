@@ -37,15 +37,12 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    cursor: pointer;
     padding: 8px 12px;
     border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: transparent;
     color: rgb(223, 223, 223);
     font-size: 14px;
-    outline: none;
-    transition: background 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
 .header-region img {
@@ -55,6 +52,15 @@
 
 .header-region span {
     margin: 0;
+}
+
+.header-region-select {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    outline: none;
+    cursor: pointer;
 }
 
 .header-options {

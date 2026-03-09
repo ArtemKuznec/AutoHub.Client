@@ -13,6 +13,7 @@ export const CREATE_AD_INITIAL_STATE: CreateAdFormState = {
   hasGbo: false,
   color: "",
   colorDetails: "",
+  price: "",
   ownersCount: "",
   mileage: "",
   hasDocProblems: false,

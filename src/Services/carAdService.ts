@@ -42,6 +42,7 @@ export type CreateAdRequest = {
   HasGBO: boolean;
   Color: CarColor;
   ColorDescription: string | null;
+  Price: number;
   OwnersCount: number;
   Mileage: number;
   HasDocumentIssues: boolean;
@@ -51,9 +52,40 @@ export type CreateAdRequest = {
   PhoneNumber: string;
 };
 
+export type CarAdDetails = {
+  id: string;
+  brand: string;
+  model: string;
+  generation: string | null;
+  bodyType: string;
+  engineVolume: number;
+  engineType: number;
+  mileage: number;
+  hasDocumentIssues: boolean;
+  needsRepair: boolean;
+  region: string;
+  city: string;
+  creatorId: string;
+  createdAt: string;
+  updatedAt: string | null;
+  status: string | number;
+  linkedPhoto: string | null;
+};
+
+export type PaginatedResponse<T> = {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  regionId: string | null;
+};
+
 export class CarAdService {
   private readonly baseUrl: string;
-  private readonly TOKEN_KEY = 'auth_token';
+  private readonly TOKEN_KEY = "auth_token";
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
@@ -65,14 +97,16 @@ export class CarAdService {
 
   private getAuthHeaders(): HeadersInit {
     const token = this.getToken();
-    return token ? {
-      'Authorization': `Bearer ${token}`
-    } : {};
+    return token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : {};
   }
 
   async createAd(request: CreateAdRequest, photos: File[] = []): Promise<void> {
     const token = this.getToken();
-    
+
     if (!token) {
       throw new Error("Токен авторизации отсутствует. Пожалуйста, выполните вход.");
     }
@@ -91,7 +125,9 @@ export class CarAdService {
     formData.append("EngineType", String(request.EngineType));
     formData.append("HasGBO", String(request.HasGBO));
     formData.append("Color", String(request.Color));
-    if (request.ColorDescription != null) formData.append("ColorDescription", request.ColorDescription);
+    if (request.ColorDescription != null)
+      formData.append("ColorDescription", request.ColorDescription);
+    formData.append("Price", String(request.Price));
     formData.append("OwnersCount", String(request.OwnersCount));
     formData.append("Mileage", String(request.Mileage));
     formData.append("HasDocumentIssues", String(request.HasDocumentIssues));
@@ -108,7 +144,7 @@ export class CarAdService {
     const response = await fetch(`${this.baseUrl}/cars`, {
       method: "POST",
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       body: formData,
     });
@@ -126,17 +162,87 @@ export class CarAdService {
           message = errorData;
         }
       } catch {
+        // ignore
       }
 
       throw new Error(message);
     }
   }
 
+  async getAds(
+    page: number = 1,
+    pageSize: number = 30,
+    regionId: string | null = null,
+  ): Promise<PaginatedResponse<CarAdDetails>> {
+    const params = new URLSearchParams();
+    params.append("page", String(page));
+    params.append("pageSize", String(pageSize));
+
+    if (regionId && regionId.trim().length > 0) {
+      params.append("regionId", regionId.trim());
+    }
+
+    const response = await fetch(`${this.baseUrl}/cars?${params.toString()}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      let message = `Не удалось получить объявления. Код статуса: ${response.status}`;
+
+      try {
+        const text = await response.text();
+        if (text) {
+          message = text;
+        }
+      } catch {
+        // ignore
+      }
+
+      throw new Error(message);
+    }
+
+    const raw = (await response.json()) as any;
+
+    const items: CarAdDetails[] = (raw.items ?? raw.Items ?? []).map((item: any) => ({
+      id: item.id ?? item.Id ?? "",
+      brand: item.brand ?? item.Brand ?? "",
+      model: item.model ?? item.Model ?? "",
+      generation: item.generation ?? item.Generation ?? null,
+      bodyType: item.bodyType ?? item.BodyType ?? "",
+      engineVolume: item.engineVolume ?? item.EngineVolume ?? 0,
+      engineType: item.engineType ?? item.EngineType ?? 0,
+      mileage: item.mileage ?? item.Mileage ?? 0,
+      hasDocumentIssues: item.hasDocumentIssues ?? item.HasDocumentIssues ?? false,
+      needsRepair: item.needsRepair ?? item.NeedsRepair ?? false,
+      region: item.region ?? item.Region ?? "",
+      city: item.city ?? item.City ?? "",
+      creatorId: item.creatorId ?? item.CreatorId ?? "",
+      createdAt: item.createdAt ?? item.CreatedAt ?? "",
+      updatedAt: item.updatedAt ?? item.UpdatedAt ?? null,
+      status: item.status ?? item.Status ?? "",
+      linkedPhoto: item.linkedPhoto ?? item.LinkedPhoto ?? null,
+    }));
+
+    const data: PaginatedResponse<CarAdDetails> = {
+      items,
+      page: raw.page ?? raw.Page ?? page,
+      pageSize: raw.pageSize ?? raw.PageSize ?? pageSize,
+      totalCount: raw.totalCount ?? raw.TotalCount ?? items.length,
+      totalPages: raw.totalPages ?? raw.TotalPages ?? 1,
+      hasPrevious: raw.hasPrevious ?? raw.HasPrevious ?? (page > 1),
+      hasNext: raw.hasNext ?? raw.HasNext ?? (raw.page ?? raw.Page ?? 1) < (raw.totalPages ?? raw.TotalPages ?? 1),
+      regionId: raw.regionId ?? raw.RegionId ?? regionId,
+    };
+
+    return data;
+  }
+
   isAuthenticated(): boolean {
     return !!this.getToken();
   }
-
 }
 
 export const carAdService = new CarAdService();
-

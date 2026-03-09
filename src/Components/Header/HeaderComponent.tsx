@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { authService } from "../../Services/authService";
+import type { Region } from "../../Services/regionService";
 import "./HeaderComponent.css";
 import autoIcon from "../../assets/autobase-icon.png";
 import markerIcon from "../../assets/marker-icon.png";
@@ -9,9 +10,18 @@ import markerIcon from "../../assets/marker-icon.png";
 type HeaderProps = {
   onCreateAdClick?: () => void;
   onCarAdsClick?: () => void;
+  regions?: Region[];
+  regionId?: string;
+  onRegionChange?: (value: string) => void;
 };
 
-const HeaderComponent: FC<HeaderProps> = ({ onCreateAdClick, onCarAdsClick: onCarsLinkClick }) => {
+const HeaderComponent: FC<HeaderProps> = ({
+  onCreateAdClick,
+  onCarAdsClick: onCarsLinkClick,
+  regions,
+  regionId,
+  onRegionChange,
+}) => {
   const navigate = useNavigate();
   const { isAuthenticated, setAuthenticated } = useAuth();
 
@@ -57,7 +67,22 @@ const HeaderComponent: FC<HeaderProps> = ({ onCreateAdClick, onCarAdsClick: onCa
 
         <button className="header-region" type="button">
           <img src={markerIcon} alt="Регион" />
-          <span>Омская область</span>
+          {onRegionChange && regions && regions.length > 0 ? (
+            <select
+              className="header-region-select"
+              value={regionId ?? ""}
+              onChange={(event) => onRegionChange(event.target.value)}
+            >
+              <option value="">Все регионы</option>
+              {regions.map((region) => (
+                <option key={region.id} value={region.id}>
+                  {region.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span>Омская область</span>
+          )}
         </button>
 
         <nav className="header-options" aria-label="Категории объявлений">

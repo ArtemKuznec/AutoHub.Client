@@ -15,6 +15,7 @@ export type CreateAdFormState = {
   hasGbo: boolean;
   color: string;
   colorDetails: string;
+  price: string;
   ownersCount: string;
   mileage: string;
   hasDocProblems: boolean;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FC, type ChangeEvent, type FormEvent } from "react";
 import { carAdService, type CreateAdRequest } from "../../Services/carAdService";
-import { regionService } from "../../Services/regionService";
+import { regionService, type Region } from "../../Services/regionService";
 import { brandService } from "../../Services/brandService";
 import Header from "../../Components/Header/HeaderComponent";
 import type {
@@ -25,7 +25,7 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
   const [errors, setErrors] = useState<CreateAdFormErrors>({});
   const [submittedSuccessfully, setSubmittedSuccessfully] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [regions, setRegions] = useState<string[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
   const [regionsError, setRegionsError] = useState<string | null>(null);
   const [brands, setBrands] = useState<string[]>([]);
   const [brandsError, setBrandsError] = useState<string | null>(null);
@@ -159,6 +159,15 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
 
     if (!form.color) newErrors.color = "Выберите цвет автомобиля.";
 
+    if (!form.price.trim()) {
+      newErrors.price = "Укажите цену автомобиля.";
+    } else {
+      const price = Number(form.price);
+      if (!Number.isInteger(price) || price <= 0) {
+        newErrors.price = "Цена должна быть положительным целым числом.";
+      }
+    }
+
     if (!form.ownersCount.trim()) {
       newErrors.ownersCount = "Укажите количество владельцев.";
     } else {
@@ -194,7 +203,7 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
       newErrors.region = "не указан регион";
     } else if (
       regions.length > 0 &&
-      !regions.some((region) => region.toLowerCase() === trimmedRegion.toLowerCase())
+      !regions.some((region) => region.name.toLowerCase() === trimmedRegion.toLowerCase())
     ) {
       newErrors.region = "Выберите регион из списка.";
     }
@@ -214,6 +223,10 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
 
     if (!validate()) return;
 
+    const matchedRegion = regions.find(
+      (region) => region.name.toLowerCase() === form.region.trim().toLowerCase(),
+    );
+
     const body: CreateAdRequest = {
       VinOrBodyNumber: form.vin.trim(),
       StsNumber: form.sts.trim() || null,
@@ -227,11 +240,12 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
       HasGBO: form.hasGbo,
       Color: mapColorToServer(form.color),
       ColorDescription: form.colorDetails.trim() || null,
+      Price: Number(form.price),
       OwnersCount: Number(form.ownersCount),
       Mileage: Number(form.mileage),
       HasDocumentIssues: form.hasDocProblems,
       NeedsRepair: form.needsRepair,
-      Region: { id: "", name: form.region.trim() },
+      Region: { id: matchedRegion?.id ?? "", name: form.region.trim() },
       City: form.city.trim(),
       PhoneNumber: form.phone.trim(),
     };
@@ -495,6 +509,22 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
 
               <div className="form-field">
                 <label className="form-label">
+                  Цена, ₽ <span className="required">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  className={`form-input ${errors.price ? "form-input--error" : ""}`}
+                  placeholder="Например, 750000"
+                  value={form.price}
+                  onChange={handleChange("price")}
+                />
+                {errors.price && <p className="form-error">{errors.price}</p>}
+              </div>
+
+              <div className="form-field">
+                <label className="form-label">
                   Пробег, км <span className="required">*</span>
                 </label>
                 <input
@@ -562,7 +592,7 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
                 />
                 <datalist id="region-suggestions">
                   {regions.map((region) => (
-                    <option key={region} value={region} />
+                    <option key={region.id} value={region.name} />
                   ))}
                 </datalist>
                 {errors.region && <p className="form-error">{errors.region}</p>}
