@@ -222,7 +222,7 @@ const CreateAdPage: FC<CreateAdPageProps> = ({ onCreateAdClick }) => {
       SteeringWheelSide: mapSteeringToServer(form.steering),
       BodyType: mapBodyTypeToServer(form.bodyType),
       Generation: form.generation.trim() || null,
-      EngineVolume: Number(form.engineVolume),
+      EngineVolume: Number(form.engineVolume.replace(",", ".")),
       EngineType: mapEngineTypeToServer(form.engineType),
       HasGBO: form.hasGbo,
       Color: mapColorToServer(form.color),
