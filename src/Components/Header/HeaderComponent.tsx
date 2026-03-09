@@ -48,22 +48,18 @@ const HeaderComponent: FC<HeaderProps> = ({
     }
   };
 
-  const handleCarsPageClick = () => {
-    if (onCarsLinkClick) {
-      onCarsLinkClick();
-      return;
-    }
-
-    navigate("/main");
-  };
-
   return (
     <header className="header">
       <div className="header-left">
-        <div className="header-logo">
+        <button
+          type="button"
+          className="header-logo"
+          onClick={() => navigate("/main")}
+          aria-label="На главную"
+        >
           <img src={autoIcon} alt="AutoHub" />
           <p className="header-title">AutoHub</p>
-        </div>
+        </button>
 
         <button className="header-region" type="button">
           <img src={markerIcon} alt="Регион" />
@@ -85,12 +81,7 @@ const HeaderComponent: FC<HeaderProps> = ({
           )}
         </button>
 
-        <nav className="header-options" aria-label="Категории объявлений">
-          <button className="header-options_option" type="button" onClick={handleCarsPageClick}>
-            Автомобили
-          </button>
-         
-        </nav>
+        <nav className="header-options" aria-label="Категории объявлений" />
       </div>
 
       <div className="header-right">

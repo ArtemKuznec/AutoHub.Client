@@ -18,14 +18,13 @@ export class BrandService {
     if (typeof window !== "undefined" && window.sessionStorage) {
       const cached = window.sessionStorage.getItem(BRANDS_SESSION_KEY);
       if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed)) {
-            this.cachedBrands = parsed as string[];
-            return this.cachedBrands;
-          }
-        } catch {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          this.cachedBrands = parsed as string[];
+          return this.cachedBrands;
         }
+      } catch {}
       }
     }
 
@@ -44,8 +43,7 @@ export class BrandService {
         if (text) {
           message = text;
         }
-      } catch {
-      }
+      } catch {}
 
       throw new Error(message);
     }
@@ -71,8 +69,7 @@ export class BrandService {
     if (typeof window !== "undefined" && window.sessionStorage) {
       try {
         window.sessionStorage.setItem(BRANDS_SESSION_KEY, JSON.stringify(brands));
-      } catch {
-      }
+      } catch {}
     }
 
     return brands;

@@ -61,7 +61,7 @@ const MainPage: FC<MainPageProps> = ({ onCreateAdClick }) => {
     try {
       const response = await carAdService.getAds(
         pageToLoad,
-        30,
+        2,
         regionId && regionId.trim().length > 0 ? regionId : null,
       );
       setAds((prev) => (pageToLoad === 1 ? response.items : [...prev, ...response.items]));
@@ -148,10 +148,38 @@ const MainPage: FC<MainPageProps> = ({ onCreateAdClick }) => {
                     <h2 className="ad-card-title">
                       {ad.brand} {ad.model}
                     </h2>
+                    <p className="ad-card-price">
+                      {ad.price.toLocaleString("ru-RU")} ₽
+                    </p>
                     <p className="ad-card-region">
                       {ad.region}
                       {ad.city ? `, ${ad.city}` : ""}
                     </p>
+                    <div className="ad-card-meta">
+                      <span className="ad-card-meta-item">
+                        Пробег: {ad.mileage.toLocaleString("ru-RU")} км
+                      </span>
+                      {ad.steeringWheelSide && (
+                        <span className="ad-card-meta-item">
+                          Руль: {ad.steeringWheelSide === 1 ? "левый" : "правый"}
+                        </span>
+                      )}
+                      {ad.ownersCount > 0 && (
+                        <span className="ad-card-meta-item">
+                          Владельцев: {ad.ownersCount}
+                        </span>
+                      )}
+                    </div>
+                    {(ad.hasDocumentIssues || ad.needsRepair) && (
+                      <p className="ad-card-issues">
+                        {[
+                          ad.hasDocumentIssues ? "Проблемы с документами" : null,
+                          ad.needsRepair ? "Требуется ремонт" : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" • ")}
+                      </p>
+                    )}
                   </div>
                   <div className="ad-card-photo-wrapper">
                     {ad.linkedPhoto ? (

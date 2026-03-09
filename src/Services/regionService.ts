@@ -29,9 +29,7 @@ export class RegionService {
             this.cachedRegions = parsed as Region[];
             return this.cachedRegions;
           }
-        } catch {
-          // ignore cache parse errors
-        }
+        } catch {}
       }
     }
 
@@ -50,9 +48,7 @@ export class RegionService {
         if (text) {
           message = text;
         }
-      } catch {
-        // ignore
-      }
+      } catch {}
 
       throw new Error(message);
     }
@@ -92,9 +88,7 @@ export class RegionService {
     if (typeof window !== "undefined" && window.sessionStorage) {
       try {
         window.sessionStorage.setItem(REGIONS_SESSION_KEY, JSON.stringify(regions));
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
 
     return regions;

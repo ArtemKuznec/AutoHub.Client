@@ -15,9 +15,14 @@
 }
 
 .header-logo {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 2px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
 }
 
 .header-logo img {
@@ -41,7 +46,7 @@
     border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: transparent;
-    color: rgb(223, 223, 223);
+    color: rgb(180, 185, 196);
     font-size: 14px;
 }
 

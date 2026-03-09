@@ -61,6 +61,9 @@ export type CarAdDetails = {
   engineVolume: number;
   engineType: number;
   mileage: number;
+  price: number;
+  ownersCount: number;
+  steeringWheelSide: number | null;
   hasDocumentIssues: boolean;
   needsRepair: boolean;
   region: string;
@@ -161,9 +164,7 @@ export class CarAdService {
         if (errorData) {
           message = errorData;
         }
-      } catch {
-        // ignore
-      }
+      } catch {}
 
       throw new Error(message);
     }
@@ -171,7 +172,7 @@ export class CarAdService {
 
   async getAds(
     page: number = 1,
-    pageSize: number = 30,
+    pageSize: number = 2,
     regionId: string | null = null,
   ): Promise<PaginatedResponse<CarAdDetails>> {
     const params = new URLSearchParams();
@@ -197,9 +198,7 @@ export class CarAdService {
         if (text) {
           message = text;
         }
-      } catch {
-        // ignore
-      }
+      } catch {}
 
       throw new Error(message);
     }
@@ -215,6 +214,9 @@ export class CarAdService {
       engineVolume: item.engineVolume ?? item.EngineVolume ?? 0,
       engineType: item.engineType ?? item.EngineType ?? 0,
       mileage: item.mileage ?? item.Mileage ?? 0,
+      price: item.price ?? item.Price ?? 0,
+      ownersCount: item.ownersCount ?? item.OwnersCount ?? 0,
+      steeringWheelSide: item.steeringWheelSide ?? item.SteeringWheelSide ?? null,
       hasDocumentIssues: item.hasDocumentIssues ?? item.HasDocumentIssues ?? false,
       needsRepair: item.needsRepair ?? item.NeedsRepair ?? false,
       region: item.region ?? item.Region ?? "",
