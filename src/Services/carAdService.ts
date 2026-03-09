@@ -242,6 +242,85 @@ export class CarAdService {
     return data;
   }
 
+  async getUserAds(): Promise<CarAdDetails[]> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error("Токен авторизации отсутствует. Пожалуйста, выполните вход.");
+    }
+
+    const response = await fetch(`${this.baseUrl}/cars/user/ads`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let message = `Не удалось получить ваши объявления. Код статуса: ${response.status}`;
+      try {
+        const text = await response.text();
+        if (text) {
+          message = text;
+        }
+      } catch {}
+      throw new Error(message);
+    }
+
+    const raw = (await response.json()) as any;
+    const itemsSource = Array.isArray(raw) ? raw : raw.items ?? raw.Items ?? [];
+
+    const items: CarAdDetails[] = itemsSource.map((item: any) => ({
+      id: item.id ?? item.Id ?? "",
+      brand: item.brand ?? item.Brand ?? "",
+      model: item.model ?? item.Model ?? "",
+      generation: item.generation ?? item.Generation ?? null,
+      bodyType: item.bodyType ?? item.BodyType ?? "",
+      engineVolume: item.engineVolume ?? item.EngineVolume ?? 0,
+      engineType: item.engineType ?? item.EngineType ?? 0,
+      mileage: item.mileage ?? item.Mileage ?? 0,
+      price: item.price ?? item.Price ?? 0,
+      ownersCount: item.ownersCount ?? item.OwnersCount ?? 0,
+      steeringWheelSide: item.steeringWheelSide ?? item.SteeringWheelSide ?? null,
+      hasDocumentIssues: item.hasDocumentIssues ?? item.HasDocumentIssues ?? false,
+      needsRepair: item.needsRepair ?? item.NeedsRepair ?? false,
+      region: item.region ?? item.Region ?? "",
+      city: item.city ?? item.City ?? "",
+      creatorId: item.creatorId ?? item.CreatorId ?? "",
+      createdAt: item.createdAt ?? item.CreatedAt ?? "",
+      updatedAt: item.updatedAt ?? item.UpdatedAt ?? null,
+      status: item.status ?? item.Status ?? "",
+      linkedPhoto: item.linkedPhoto ?? item.LinkedPhoto ?? null,
+    }));
+
+    return items;
+  }
+
+  async deleteAd(id: string): Promise<void> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error("Токен авторизации отсутствует. Пожалуйста, выполните вход.");
+    }
+
+    const response = await fetch(`${this.baseUrl}/cars/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let message = `Не удалось удалить объявление. Код статуса: ${response.status}`;
+      try {
+        const text = await response.text();
+        if (text) {
+          message = text;
+        }
+      } catch {}
+      throw new Error(message);
+    }
+  }
+
   isAuthenticated(): boolean {
     return !!this.getToken();
   }

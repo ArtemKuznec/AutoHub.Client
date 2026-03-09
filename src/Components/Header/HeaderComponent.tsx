@@ -81,7 +81,17 @@ const HeaderComponent: FC<HeaderProps> = ({
           )}
         </button>
 
-        <nav className="header-options" aria-label="Категории объявлений" />
+        <nav className="header-options" aria-label="Навигация">
+          {isAuthenticated && (
+            <button
+              type="button"
+              className="header-options_option"
+              onClick={() => navigate("/my-ads")}
+            >
+              Мои объявления
+            </button>
+          )}
+        </nav>
       </div>
 
       <div className="header-right">

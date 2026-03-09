@@ -8,6 +8,7 @@ import MainPage from "./Pages/MainPage/MainPage";
 import CreateAdPage from "./Pages/CreateAdPage/CreateAdPage";
 import LoginPage from "./Pages/LoginPage/LoginPage";
 import RegisterPage from "./Pages/RegisterPage/RegisterPage";
+import MyAdsPage from "./Pages/MyAdsPage/MyAdsPage";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -23,6 +24,14 @@ createRoot(document.getElementById("root")!).render(
           element={
             <ProtectedRoute>
               <CreateAdPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-ads"
+          element={
+            <ProtectedRoute>
+              <MyAdsPage />
             </ProtectedRoute>
           }
         />
