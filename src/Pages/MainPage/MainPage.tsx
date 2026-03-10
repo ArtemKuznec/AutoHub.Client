@@ -169,8 +169,8 @@ const MainPage: FC<MainPageProps> = ({ onCreateAdClick }) => {
                         </div> 
                     </div>
                    
-                        {ad.hasDocumentIssues && (<p className="ad-card-issues">• Проблемы с документами</p>)}
-                        {ad.needsRepair && (<p className="ad-card-issues">• Требуется ремонт</p>)}
+                    {ad.hasDocumentIssues && (<p className="ad-card-issues">• Проблемы с документами</p>)}
+                    {ad.needsRepair && (<p className="ad-card-issues">• Требуется ремонт</p>)}
                     
                     
                      <p className="ad-card-region">
