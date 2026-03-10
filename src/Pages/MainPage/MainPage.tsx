@@ -151,35 +151,32 @@ const MainPage: FC<MainPageProps> = ({ onCreateAdClick }) => {
                     <p className="ad-card-price">
                       {ad.price.toLocaleString("ru-RU")} ₽
                     </p>
-                    <p className="ad-card-region">
-                      {ad.region}
-                      {ad.city ? `, ${ad.city}` : ""}
-                    </p>
                     <div className="ad-card-meta">
                       <span className="ad-card-meta-item">
                         Пробег: {ad.mileage.toLocaleString("ru-RU")} км
                       </span>
-                      {ad.steeringWheelSide && (
-                        <span className="ad-card-meta-item">
-                          Руль: {ad.steeringWheelSide === 1 ? "левый" : "правый"}
-                        </span>
-                      )}
-                      {ad.ownersCount > 0 && (
-                        <span className="ad-card-meta-item">
-                          Владельцев: {ad.ownersCount}
-                        </span>
-                      )}
+                      
+                       <div className="ad-card-meta-section">
+                          <span className="ad-card-meta-item">
+                            Руль: {ad.steeringWheelSide === 1 ? "левый" : "правый"}
+                          </span>
+                        
+                        {ad.ownersCount > 0 && (
+                          <span className="ad-card-meta-item">
+                            Владельцев: {ad.ownersCount}
+                          </span>
+                        )}
+                        </div> 
                     </div>
-                    {(ad.hasDocumentIssues || ad.needsRepair) && (
-                      <p className="ad-card-issues">
-                        {[
-                          ad.hasDocumentIssues ? "Проблемы с документами" : null,
-                          ad.needsRepair ? "Требуется ремонт" : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" • ")}
-                      </p>
-                    )}
+                   
+                        {ad.hasDocumentIssues && (<p className="ad-card-issues">• Проблемы с документами</p>)}
+                        {ad.needsRepair && (<p className="ad-card-issues">• Требуется ремонт</p>)}
+                    
+                    
+                     <p className="ad-card-region">
+                      {ad.region}
+                      {ad.city ? `, ${ad.city}` : ""}
+                    </p>
                   </div>
                   <div className="ad-card-photo-wrapper">
                     {ad.linkedPhoto ? (

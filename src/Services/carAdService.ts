@@ -107,6 +107,22 @@ export class CarAdService {
       : {};
   }
 
+  static parsePhotoIdFromUrl(linkedPhoto: string | null): { carAdId: string; photoId: string } | null {
+    if (!linkedPhoto) return null;
+    
+    const regex = /\/api\/photos\/([^\/]+)\/([^\/]+)$/;
+    const match = linkedPhoto.match(regex);
+    
+    if (match && match[1] && match[2]) {
+      return {
+        carAdId: match[1],
+        photoId: match[2]
+      };
+    }
+    
+    return null;
+  }
+
   async createAd(request: CreateAdRequest, photos: File[] = []): Promise<void> {
     const token = this.getToken();
 

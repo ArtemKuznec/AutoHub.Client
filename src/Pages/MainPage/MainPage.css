@@ -106,32 +106,40 @@
 
 .ad-card-title {
   margin: 0;
-  font-size: 20px;
+  font-size: 30px;
   font-weight: 600;
   color: #111827;
 }
 
 .ad-card-price {
   margin: 0;
-  font-size: 18px;
+  font-size: 28px;
   font-weight: 700;
-  color: #16a34a;
+  color: #5b9972;
   white-space: nowrap;
 }
 
 .ad-card-region {
-  margin: 0;
-  font-size: 14px;
+  margin: 20px 0 0 0;
+  font-size: 16px;
   color: #6b7280;
 }
 
 .ad-card-meta {
   margin-top: 4px;
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   gap: 8px 16px;
-  font-size: 13px;
+  font-size: 16px;
   color: #4b5563;
+}
+
+.ad-card-meta-section {
+  display: flex;
+  flex-direction: row;
+  gap: 8px 16px;
+
 }
 
 .ad-card-meta-item {
@@ -140,14 +148,14 @@
 
 .ad-card-issues {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: #dc2626;
 }
 
 .ad-card-photo-wrapper {
-  width: 160px;
-  height: 100px;
+  height: 204px;
+  width: 272px;
   border-radius: 8px;
   overflow: hidden;
   background: #e5e7eb;
@@ -230,11 +238,11 @@
   }
 
   .ad-card-title {
-    font-size: 18px;
+    font-size: 25px;
   }
 
   .ad-card-price {
-    font-size: 16px;
+    font-size: 24px;
   }
 
   .brand-filter-button {
